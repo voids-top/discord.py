@@ -713,7 +713,7 @@ class AudioPlayer(threading.Thread):
         self.__loops = 0
         self.cache = []
         threading.Thread(target=self.cacher, daemon=True).start()
-        while not len(self.cache) > 50*1:
+        while not len(self.cache) > 50*2:
             time.sleep(0.1)
         self._start = time.perf_counter()
         skipping = False
@@ -771,7 +771,7 @@ class AudioPlayer(threading.Thread):
     def cacher(self):
         while True:
             try:
-                if len(self.cache) < 50*5:
+                if len(self.cache) < 50*30:
                     data = self.source.read()
                     if not data:
                         return
