@@ -715,7 +715,7 @@ class AudioPlayer(threading.Thread):
         threading.Thread(target=self.cacher, daemon=True).start()
         while not len(self.cache) > 50*2:
             time.sleep(0.1)
-        self._start = time.perf_counter()+2
+        self._start = time.perf_counter()+1
         skipping = False
 
         # getattr lookup speed ups
@@ -761,7 +761,7 @@ class AudioPlayer(threading.Thread):
             delay = self.DELAY + (next_time - time.perf_counter())
             if delay < 0: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
                 print("starttime moved")
-                self._start += 0.02
+                self._start += 0.01
             else:
                 if delay > 0.01:
                     #print(f"{delay} sleep")
