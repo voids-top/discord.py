@@ -708,6 +708,7 @@ class AudioPlayer(threading.Thread):
         self._resumed.set()  # we are not paused
         self._current_error: Optional[Exception] = None
         self._lock: threading.Lock = threading.Lock()
+        self.moved_amount = 0
 
         if after is not None and not callable(after):
             raise TypeError('Expected a callable for the "after" parameter.')
@@ -764,7 +765,8 @@ class AudioPlayer(threading.Thread):
             next_time = self._start + self.DELAY * self.__loops
             delay = self.DELAY + (next_time - time.perf_counter())
             if delay < 0.01: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
-                print("starttime moved")
+                #print("starttime moved")
+                self.moved_amount += 0.002
                 self._start += 0.002
             else:
                 #if delay > 0.018:
