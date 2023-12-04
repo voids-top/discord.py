@@ -777,7 +777,8 @@ class AudioPlayer(threading.Thread):
                     data = self.source.read()
                     if not data:
                         return
-                    self.cache.append(data)
+                    if data:
+                        self.cache.append(data)
                 else:
                     time.sleep(0.1)
             except:
