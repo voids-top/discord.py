@@ -435,7 +435,7 @@ class FFmpegOpusAudio(FFmpegAudio):
         # fmt: off
         args.extend(('-map_metadata', '-1',
                      '-f', 'opus',
-                     '-c:a', codec,
+                     '-c:a', "libopus",
                      '-ar', '48000',
                      '-ac', '2',
                      '-b:a', f'{bitrate}k',
@@ -709,12 +709,19 @@ class AudioPlayer(threading.Thread):
             raise TypeError('Expected a callable for the "after" parameter.')
 
     def _do_run(self) -> None:
-        self.loops = 0
+        self.loops = 0 # for calcing duration (50*self.loops)s
+        self.__loops = 0
+        self.cache = []
+        threading.Thread(target=self.cacher, daemon=True).start()
         self._start = time.perf_counter()
+        while not len(self.cache) > 50*3:
+            time.sleep(0.1)
+        skipping = False
 
         # getattr lookup speed ups
         client = self.client
         play_audio = client.send_audio_packet
+        skip_frame = client.send_null_packet
         self._speak(SpeakingState.voice)
 
         while not self._end.is_set():
@@ -725,7 +732,10 @@ class AudioPlayer(threading.Thread):
                 self._resumed.wait()
                 continue
 
-            data = self.source.read()
+            try:
+                data = self.cache.pop(0)
+            except:
+                data = None
 
             if not data:
                 self.stop()
@@ -742,17 +752,35 @@ class AudioPlayer(threading.Thread):
                 _log.debug('Reconnected, resuming playback')
                 self._speak(SpeakingState.voice)
                 # reset our internal data
-                self.loops = 0
+                self.__loops = 0
                 self._start = time.perf_counter()
 
-            play_audio(data, encode=not self.source.is_opus())
+            play_audio(data) #, encode=not self.source.is_opus())
             self.loops += 1
-            next_time = self._start + self.DELAY * self.loops
-            delay = max(0, self.DELAY + (next_time - time.perf_counter()))
-            time.sleep(delay)
+            self.__loops += 1
+            next_time = self._start + self.DELAY * self.__loops
+            delay = self.DELAY + (next_time - time.perf_counter())
+            if delay < -0.1:
+                skip_frame()
+            else:
+                if delay:
+                    time.sleep(delay)
 
         self.send_silence()
 
+    def cacher(self):
+        while True:
+            try:
+                if len(self.cache) < 50*5:
+                    data = self.source.read()
+                    if not data:
+                        return
+                    self.cache.append(data)
+                else:
+                    time.sleep(0.1)
+            except:
+                time.sleep(0.1)
+    
     def run(self) -> None:
         try:
             self._do_run()
