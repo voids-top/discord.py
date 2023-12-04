@@ -739,7 +739,7 @@ class AudioPlayer(threading.Thread):
         play_audio = client.send_audio_packet
         skip_frame = client.send_null_packet
         self._speak(SpeakingState.voice)
-        time.sleep(0.5)
+        time.sleep(0.1)
         self._start = time.perf_counter()+1
 
         while not self._end.is_set():
@@ -784,7 +784,9 @@ class AudioPlayer(threading.Thread):
             else:
                 if delay > self.source.sleep_limit:
                     #print(f"{delay} sleep")
-                    time.sleep(delay-self.source.sleep_discount)
+                    if delay > 0.19:
+                        delay = 0.19
+                    time.sleep(delay)
 
         self.send_silence()
 
