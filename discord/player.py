@@ -761,11 +761,11 @@ class AudioPlayer(threading.Thread):
             delay = self.DELAY + (next_time - time.perf_counter())
             if delay < 0: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
                 print("starttime moved")
-                self._start -= 0.005
+                self._start -= 0.01
             else:
-                if delay > 0.01:
+                if delay > 0.018:
                     #print(f"{delay} sleep")
-                    time.sleep(delay)
+                    time.sleep(0.015)
 
         self.send_silence()
 
