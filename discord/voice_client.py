@@ -569,7 +569,7 @@ class VoiceClient(VoiceProtocol):
         #    encoded_data = self.encoder.encode(data, self.encoder.SAMPLES_PER_FRAME)
         #else:
         #    encoded_data = data
-        packet = self._get_voice_packet(encoded_data)
+        packet = self._get_voice_packet(data)
         try:
             self._connection.send_packet(packet)
         except OSError:
