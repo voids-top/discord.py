@@ -740,7 +740,7 @@ class AudioPlayer(threading.Thread):
         skip_frame = client.send_null_packet
         self._speak(SpeakingState.voice)
         time.sleep(0.1)
-        self._start = time.perf_counter()+1
+        self._start = time.perf_counter()+0.1
 
         while not self._end.is_set():
             # are we paused?
