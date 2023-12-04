@@ -438,14 +438,14 @@ class FFmpegOpusAudio(FFmpegAudio):
                      '-c:a', "libopus",
                      '-ar', '48000',
                      '-ac', '2',
-                     '-compression_level', '0',
-                     '-b:a', '320k',
+                     '-compression_level', '10',
+                     '-b:a', f'{bitrate}k',
                      '-application', 'audio',
-                     '-vbr', 'constrained',
+                     '-vbr', 'on',
                      '-loglevel', 'warning',
                      #'-cutoff', '1',
                      #'-fec', 'true',
-                     #'-packet_loss', '15',
+                     '-packet_loss', '0',
                      '-blocksize', str(self.BLOCKSIZE)))
         # fmt: on
 
