@@ -418,18 +418,18 @@ class FFmpegOpusAudio(FFmpegAudio):
         pipe: bool = False,
         sleep_min:float = 0.1,
         sleep_max:float = 0.18,
-        cache_limit:int = 50*30,
-        cache_before:int = 50*2,
-        delay_limit:float = 0.04,
-        skip_amount:float = 0.04,
+        cache_limit:float = 30.0,
+        cache_before:float = 2.0,
+        delay_limit:float = 0.004,
+        skip_amount:float = 0.004,
         stderr: Optional[IO[bytes]] = None,
         before_options: Optional[str] = None,
         options: Optional[str] = None,
     ) -> None:
         args = []
         subprocess_kwargs = {'stdin': subprocess.PIPE if pipe else subprocess.DEVNULL, 'stderr': stderr}
-        self.cache_limit = cache_limit
-        self.cache_before = cache_before
+        self.cache_limit = cache_limit*50
+        self.cache_before = cache_before*50
         self.sleep_min = sleep_min
         self.sleep_max = sleep_max
         self.delay_limit = delay_limit
