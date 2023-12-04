@@ -754,17 +754,18 @@ class AudioPlayer(threading.Thread):
                 # reset our internal data
                 self.__loops = 0
                 self._start = time.perf_counter()
-
             play_audio(data) #, encode=not self.source.is_opus())
             self.loops += 1
             self.__loops += 1
             next_time = self._start + self.DELAY * self.__loops
             delay = self.DELAY + (next_time - time.perf_counter())
             if delay < 0: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
+                print("starttime moved")
                 self._start += 0.02
             else:
                 if delay > 0.01:
-                    time.sleep(0.05)
+                    print("0.005 sleep")
+                    time.sleep(0.001)
 
         self.send_silence()
 
