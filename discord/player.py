@@ -713,7 +713,7 @@ class AudioPlayer(threading.Thread):
         self.__loops = 0
         self.cache = []
         threading.Thread(target=self.cacher, daemon=True).start()
-        while not len(self.cache) > 50*3:
+        while not len(self.cache) > 50*1:
             time.sleep(0.1)
         self._start = time.perf_counter()
         skipping = False
@@ -760,10 +760,10 @@ class AudioPlayer(threading.Thread):
             self.__loops += 1
             next_time = self._start + self.DELAY * self.__loops
             delay = self.DELAY + (next_time - time.perf_counter())
-            if delay < -0.1: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
+            if delay < 0: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
                 skip_frame()
             else:
-                if delay > 0:
+                if delay > 0.05:
                     time.sleep(delay)
 
         self.send_silence()
