@@ -764,7 +764,7 @@ class AudioPlayer(threading.Thread):
                 self._start += 0.02
             else:
                 if delay > 0.01:
-                    print(f"{delay} sleep")
+                    #print(f"{delay} sleep")
                     time.sleep(delay)
 
         self.send_silence()
