@@ -438,10 +438,11 @@ class FFmpegOpusAudio(FFmpegAudio):
                      '-c:a', "libopus",
                      '-ar', '48000',
                      '-ac', '2',
-                     '-b:a', f'{bitrate}k',
+                     '-b:a', '320k',
+                     '-application', 'audio',
                      '-loglevel', 'warning',
                      '-fec', 'true',
-                     '-packet_loss', '15',
+                     '-packet_loss', '2',
                      '-blocksize', str(self.BLOCKSIZE)))
         # fmt: on
 
@@ -761,11 +762,11 @@ class AudioPlayer(threading.Thread):
             delay = self.DELAY + (next_time - time.perf_counter())
             if delay < 0.01: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
                 print("starttime moved")
-                self._start += 0.001
+                self._start += 0.002
             else:
                 #if delay > 0.018:
                 #    #print(f"{delay} sleep")
-                time.sleep(delay-0.001)
+                time.sleep(delay-0.002)
 
         self.send_silence()
 
