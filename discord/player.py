@@ -416,12 +416,24 @@ class FFmpegOpusAudio(FFmpegAudio):
         codec: Optional[str] = None,
         executable: str = 'ffmpeg',
         pipe: bool = False,
+        sleep_min:float = 0.1,
+        sleep_max:float = 0.18,
+        cache_limit:int = 50*30,
+        cache_before:int = 50*2,
+        delay_limit:float = 0.04,
+        skip_amount:float = 0.04,
         stderr: Optional[IO[bytes]] = None,
         before_options: Optional[str] = None,
         options: Optional[str] = None,
     ) -> None:
         args = []
         subprocess_kwargs = {'stdin': subprocess.PIPE if pipe else subprocess.DEVNULL, 'stderr': stderr}
+        self.cache_limit = cache_limit
+        self.cache_before = cache_before
+        self.sleep_min = sleep_min
+        self.sleep_max = sleep_max
+        self.delay_limit = delay_limit
+        self.skip_amount = skip_amount
 
         if isinstance(before_options, str):
             args.extend(shlex.split(before_options))
@@ -718,7 +730,7 @@ class AudioPlayer(threading.Thread):
         self.__loops = 0
         self.cache = []
         threading.Thread(target=self.cacher, daemon=True).start()
-        while not len(self.cache) > 50*2:
+        while not len(self.cache) > self.source.cache_before:
             time.sleep(0.1)
         self._start = time.perf_counter()+1
         skipping = False
@@ -764,30 +776,30 @@ class AudioPlayer(threading.Thread):
             self.__loops += 1
             next_time = self._start + self.DELAY * self.__loops
             delay = self.DELAY + (next_time - time.perf_counter())
-            if delay < 0.004: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
+            if delay < self.source.delay_limit: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
                 #print("starttime moved")
-                self.moved_amount += 0.002
-                self._start += 0.002
+                self.moved_amount += self.source.skip_amount
+                self._start += self.source.skip_amount
             else:
-                if delay > 0.014:
+                if delay > self.source.sleep_min:
                     #print(f"{delay} sleep")
-                    time.sleep(delay-0.002)
+                    time.sleep(delay if self.source.sleep_max > delay else self.source.sleep_max)
 
         self.send_silence()
 
     def cacher(self):
         while True:
             try:
-                if len(self.cache) < 50*30:
+                if len(self.cache) < self.source.cache_limit:
                     data = self.source.read()
                     if not data:
                         return
                     if data:
                         self.cache.append(data)
                 else:
-                    time.sleep(0.1)
+                    time.sleep(1)
             except:
-                time.sleep(0.1)
+                time.sleep(1)
     
     def run(self) -> None:
         try:
