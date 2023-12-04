@@ -233,7 +233,7 @@ class VoiceClient(VoiceProtocol):
         self._lite_nonce: int = 0
 
         self._connection: VoiceConnectionState = self.create_connection_state()
-        self.box = nacl.secret.SecretBox(bytes(self._connection.secret_key))
+        self.box = None
 
     warn_nacl: bool = not has_nacl
     supported_modes: Tuple[SupportedModes, ...] = (
@@ -369,6 +369,8 @@ class VoiceClient(VoiceProtocol):
     # audio related
 
     def _get_voice_packet(self, data):
+        if not self.box:
+            self.box = nacl.secret.SecretBox(bytes(self._connection.secret_key))
         header = bytearray(12)
 
         # Formulate rtp header
