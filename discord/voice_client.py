@@ -233,6 +233,7 @@ class VoiceClient(VoiceProtocol):
         self._lite_nonce: int = 0
 
         self._connection: VoiceConnectionState = self.create_connection_state()
+        self.box = nacl.secret.SecretBox(bytes(self._connection.secret_key))
 
     warn_nacl: bool = not has_nacl
     supported_modes: Tuple[SupportedModes, ...] = (
@@ -381,26 +382,23 @@ class VoiceClient(VoiceProtocol):
         return encrypt_packet(header, data)
 
     def _encrypt_xsalsa20_poly1305(self, header: bytes, data) -> bytes:
-        box = nacl.secret.SecretBox(bytes(self.secret_key))
         nonce = bytearray(24)
         nonce[:12] = header
 
-        return header + box.encrypt(bytes(data), bytes(nonce)).ciphertext
+        return header + self.box.encrypt(bytes(data), bytes(nonce)).ciphertext
 
     def _encrypt_xsalsa20_poly1305_suffix(self, header: bytes, data) -> bytes:
-        box = nacl.secret.SecretBox(bytes(self.secret_key))
         nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
 
-        return header + box.encrypt(bytes(data), nonce).ciphertext + nonce
+        return header + self.box.encrypt(bytes(data), nonce).ciphertext + nonce
 
     def _encrypt_xsalsa20_poly1305_lite(self, header: bytes, data) -> bytes:
-        box = nacl.secret.SecretBox(bytes(self.secret_key))
         nonce = bytearray(24)
 
         nonce[:4] = struct.pack('>I', self._lite_nonce)
         self.checked_add('_lite_nonce', 1, 4294967295)
 
-        return header + box.encrypt(bytes(data), bytes(nonce)).ciphertext + nonce[:4]
+        return header + self.box.encrypt(bytes(data), bytes(nonce)).ciphertext + nonce[:4]
 
     def play(
         self,
@@ -538,7 +536,11 @@ class VoiceClient(VoiceProtocol):
 
         self._player.set_source(value)
 
-    def send_audio_packet(self, data: bytes, *, encode: bool = True) -> None:
+    def send_null_packet(self) -> None:
+        # skipping frames (on server side)
+        self.checked_add('sequence', 1, 65535)
+        self.checked_add('timestamp', opus.Encoder.SAMPLES_PER_FRAME, 4294967295)
+    def send_audio_packet(self, data: bytes, *, encode: bool = False) -> None:
         """Sends an audio packet composed of the data.
 
         You must be connected to play audio.
@@ -560,9 +562,11 @@ class VoiceClient(VoiceProtocol):
 
         self.checked_add('sequence', 1, 65535)
         if encode:
-            encoded_data = self.encoder.encode(data, self.encoder.SAMPLES_PER_FRAME)
-        else:
-            encoded_data = data
+            raise Exception("encoding is deprecated")
+        #if encode:
+        #    encoded_data = self.encoder.encode(data, self.encoder.SAMPLES_PER_FRAME)
+        #else:
+        #    encoded_data = data
         packet = self._get_voice_packet(encoded_data)
         try:
             self._connection.send_packet(packet)
