@@ -732,7 +732,6 @@ class AudioPlayer(threading.Thread):
         threading.Thread(target=self.cacher, daemon=True).start()
         while not len(self.cache) > self.source.cache_before:
             time.sleep(0.1)
-        self._start = time.perf_counter()+1
         skipping = False
 
         # getattr lookup speed ups
@@ -740,6 +739,8 @@ class AudioPlayer(threading.Thread):
         play_audio = client.send_audio_packet
         skip_frame = client.send_null_packet
         self._speak(SpeakingState.voice)
+        time.sleep(0.5)
+        self._start = time.perf_counter()+1
 
         while not self._end.is_set():
             # are we paused?
@@ -783,7 +784,7 @@ class AudioPlayer(threading.Thread):
             else:
                 if delay > self.source.sleep_min:
                     #print(f"{delay} sleep")
-                    time.sleep(delay if self.source.sleep_max > delay else self.source.sleep_max)
+                    time.sleep(delay-0.002)
 
         self.send_silence()
 
