@@ -416,8 +416,8 @@ class FFmpegOpusAudio(FFmpegAudio):
         codec: Optional[str] = None,
         executable: str = 'ffmpeg',
         pipe: bool = False,
-        sleep_min:float = 0.1,
-        sleep_max:float = 0.18,
+        sleep_limit:float = 0.1,
+        sleep_discount:float = 0.004,
         cache_limit:float = 30.0,
         cache_before:float = 2.0,
         delay_limit:float = 0.004,
@@ -430,8 +430,8 @@ class FFmpegOpusAudio(FFmpegAudio):
         subprocess_kwargs = {'stdin': subprocess.PIPE if pipe else subprocess.DEVNULL, 'stderr': stderr}
         self.cache_limit = cache_limit*50
         self.cache_before = cache_before*50
-        self.sleep_min = sleep_min
-        self.sleep_max = sleep_max
+        self.sleep_limit = sleep_limit
+        self.sleep_discount = sleep_discount
         self.delay_limit = delay_limit
         self.skip_amount = skip_amount
 
@@ -782,9 +782,9 @@ class AudioPlayer(threading.Thread):
                 self.moved_amount += self.source.skip_amount
                 self._start += self.source.skip_amount
             else:
-                if delay > self.source.sleep_min:
+                if delay > self.source.sleep_limit:
                     #print(f"{delay} sleep")
-                    time.sleep(delay-0.002)
+                    time.sleep(delay-self.source.sleep_discount)
 
         self.send_silence()
 
