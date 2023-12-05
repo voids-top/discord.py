@@ -542,6 +542,11 @@ class VoiceClient(VoiceProtocol):
         # skipping frames (on server side)
         self.checked_add('sequence', 1, 65535)
         self.checked_add('timestamp', opus.Encoder.SAMPLES_PER_FRAME, 4294967295)
+    def encrypt_packet(self, data):
+        self.checked_add('sequence', 1, 65535)
+        data = self._get_voice_packet(data)
+        self.checked_add('timestamp', opus.Encoder.SAMPLES_PER_FRAME, 4294967295)
+        return data
     def send_audio_packet(self, data: bytes, *, encode: bool = False) -> None:
         """Sends an audio packet composed of the data.
 
@@ -562,17 +567,18 @@ class VoiceClient(VoiceProtocol):
             Encoding the data failed.
         """
 
-        self.checked_add('sequence', 1, 65535)
+        
         if encode:
             raise Exception("encoding is deprecated")
         #if encode:
         #    encoded_data = self.encoder.encode(data, self.encoder.SAMPLES_PER_FRAME)
         #else:
         #    encoded_data = data
-        packet = self._get_voice_packet(data)
+        packet = data
+        #packet = self._get_voice_packet(data)
         try:
             self._connection.send_packet(packet)
         except OSError:
             _log.info('A packet has been dropped (seq: %s, timestamp: %s)', self.sequence, self.timestamp)
 
-        self.checked_add('timestamp', opus.Encoder.SAMPLES_PER_FRAME, 4294967295)
+        
