@@ -750,14 +750,14 @@ class AudioPlayer(threading.Thread):
                 self._resumed.wait()
                 continue
 
-            try:
-                data = self.cache.pop(0)
-            except:
-                data = None
+            #try:
+            #    data = self.cache.pop(0)
+            #except:
+            #    data = None
 
-            if not data:
-                self.stop()
-                break
+            #if not data:
+            #    self.stop()
+            #    break
 
             # are we disconnected from voice?
             if not client.is_connected():
@@ -772,35 +772,37 @@ class AudioPlayer(threading.Thread):
                 # reset our internal data
                 self.__loops = 0
                 self._start = time.perf_counter()
-            play_audio(data) #, encode=not self.source.is_opus())
-            self.loops += 1
-            self.__loops += 1
+            #play_audio(data) #, encode=not self.source.is_opus())
+            #self.loops += 1
+            #self.__loops += 1
             next_time = self._start + self.DELAY * self.__loops
             delay = self.DELAY + (next_time - time.perf_counter())
-            #if delay <= 0.002:
-            #    try:
-            #        data = self.cache.pop(0)
-            #    except:
-            #        data = None
-            #    if not data:
-            #        self.stop()
-            #        break
-            #    play_audio(data)
-            #    self.loops += 1
-            #    self.__loops += 1
-            #else:
-            #    if delay > 0.002:
-            #        time.sleep(0.001)
-            if delay < self.source.delay_limit: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
-                #print("starttime moved")
-                self.moved_amount += self.source.skip_amount
-                self._start -= self.source.skip_amount
+            if 0 <= delay <= 0.002:
+                try:
+                    data = self.cache.pop(0)
+                except:
+                    data = None
+                if not data:
+                    self.stop()
+                    break
+                play_audio(data)
+                self.loops += 1
+                self.__loops += 1
+            elif delay < 0:
+                self.__loops += 1
             else:
-                if delay > self.source.sleep_limit:
-                    #print(f"{delay} sleep")
-                    if delay > self.source.sleep_max:
-                        delay = self.source.sleep_max
-                    time.sleep(delay)
+                if delay > 0.002:
+                    time.sleep(0.001)
+            #if delay < self.source.delay_limit: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
+            #    #print("starttime moved")
+            #    self.moved_amount += self.source.skip_amount
+            #    self._start -= self.source.skip_amount
+            #else:
+            #    if delay > self.source.sleep_limit:
+            #        #print(f"{delay} sleep")
+            #        if delay > self.source.sleep_max:
+            #            delay = self.source.sleep_max
+            #        time.sleep(delay)
 
         self.send_silence()
 
