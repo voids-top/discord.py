@@ -789,7 +789,8 @@ class AudioPlayer(threading.Thread):
                 self.loops += 1
                 self.__loops += 1
             else:
-                time.sleep(0.001)
+                if delay > 0.002:
+                    time.sleep(0.001)
             #if delay < self.source.delay_limit: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
             #    #print("starttime moved")
             #    self.moved_amount += self.source.skip_amount
@@ -811,7 +812,7 @@ class AudioPlayer(threading.Thread):
                     if not data:
                         return
                     if data:
-                        self.cache.append(data)
+                        self.cache.append(self.client.get_encrypt_packet(data))
                 else:
                     time.sleep(1)
             except:
