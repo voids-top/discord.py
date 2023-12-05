@@ -821,7 +821,7 @@ class AudioPlayer(threading.Thread):
                 else:
                     time.sleep(1)
             except:
-                time.sleep(0.1)
+                time.sleep(1)
     def sender(self):
         while not self._end.is_set():
             try:
