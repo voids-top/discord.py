@@ -740,7 +740,7 @@ class AudioPlayer(threading.Thread):
         skip_frame = client.send_null_packet
         self._speak(SpeakingState.voice)
         time.sleep(0.01)
-        self._start = time.perf_counter()-0.10
+        self._start = time.perf_counter()
 
         while not self._end.is_set():
             # are we paused?
@@ -750,14 +750,14 @@ class AudioPlayer(threading.Thread):
                 self._resumed.wait()
                 continue
 
-            try:
-                data = self.cache.pop(0)
-            except:
-                data = None
+            #try:
+            #    data = self.cache.pop(0)
+            #except:
+            #    data = None
 
-            if not data:
-                self.stop()
-                break
+            #if not data:
+            #    self.stop()
+            #    break
 
             # are we disconnected from voice?
             if not client.is_connected():
@@ -778,6 +778,13 @@ class AudioPlayer(threading.Thread):
             next_time = self._start + self.DELAY * self.__loops
             delay = self.DELAY + (next_time - time.perf_counter())
             if delay < 0:
+                try:
+                    data = self.cache.pop(0)
+                except:
+                    data = None
+                if not data:
+                    self.stop()
+                    break
                 play_audio(data)
                 self.loops += 1
                 self.__loops += 1
