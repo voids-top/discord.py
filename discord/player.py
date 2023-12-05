@@ -731,8 +731,8 @@ class AudioPlayer(threading.Thread):
         self.cache = []
         self.send_cache = []
         threading.Thread(target=self.cacher, daemon=True).start()
-        for n in range(3):
-            threading.Thread(target=self.sender, daemon=True).start()
+        #for n in range(3):
+        #    threading.Thread(target=self.sender, daemon=True).start()
         while not len(self.cache) > self.source.cache_before:
             time.sleep(0.1)
         skipping = False
@@ -780,7 +780,7 @@ class AudioPlayer(threading.Thread):
             #self.__loops += 1
             next_time = self._start + self.DELAY * self.__loops
             delay = self.DELAY + (next_time - time.perf_counter())
-            if delay <= 0.002:
+            if delay <= 0.02:
                 try:
                     data = self.cache.pop(0)
                 except:
@@ -788,11 +788,11 @@ class AudioPlayer(threading.Thread):
                 if not data:
                     self.stop()
                     break
-                self.send_cache.append(data)
+                play_audio(data)
                 self.loops += 1
                 self.__loops += 1
             else:
-                if delay > 0.002:
+                if delay > 0.02:
                     time.sleep(0.001)
             #if delay < self.source.delay_limit: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
             #    #print("starttime moved")
