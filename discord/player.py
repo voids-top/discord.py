@@ -777,7 +777,7 @@ class AudioPlayer(threading.Thread):
             #self.__loops += 1
             next_time = self._start + self.DELAY * self.__loops
             delay = self.DELAY + (next_time - time.perf_counter())
-            if delay < 0:
+            if delay <= 0.002:
                 try:
                     data = self.cache.pop(0)
                 except:
