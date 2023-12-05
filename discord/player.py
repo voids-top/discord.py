@@ -772,21 +772,27 @@ class AudioPlayer(threading.Thread):
                 # reset our internal data
                 self.__loops = 0
                 self._start = time.perf_counter()
-            play_audio(data) #, encode=not self.source.is_opus())
-            self.loops += 1
-            self.__loops += 1
+            #play_audio(data) #, encode=not self.source.is_opus())
+            #self.loops += 1
+            #self.__loops += 1
             next_time = self._start + self.DELAY * self.__loops
             delay = self.DELAY + (next_time - time.perf_counter())
-            if delay < self.source.delay_limit: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
-                #print("starttime moved")
-                self.moved_amount += self.source.skip_amount
-                self._start -= self.source.skip_amount
+            if delay < 0:
+                play_audio(data)
+                self.loops += 1
+                self.__loops += 1
             else:
-                if delay > self.source.sleep_limit:
-                    #print(f"{delay} sleep")
-                    if delay > self.source.sleep_max:
-                        delay = self.source.sleep_max
-                    time.sleep(delay)
+                time.sleep(0.001)
+            #if delay < self.source.delay_limit: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
+            #    #print("starttime moved")
+            #    self.moved_amount += self.source.skip_amount
+            #    self._start -= self.source.skip_amount
+            #else:
+            #    if delay > self.source.sleep_limit:
+            #        #print(f"{delay} sleep")
+            #        if delay > self.source.sleep_max:
+            #            delay = self.source.sleep_max
+            #        time.sleep(delay)
 
         self.send_silence()
 
