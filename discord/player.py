@@ -812,7 +812,7 @@ class AudioPlayer(threading.Thread):
                     if not data:
                         return
                     if data:
-                        self.cache.append(self.client.get_encrypt_packet(data))
+                        self.cache.append(self.client.encrypt_packet(data))
                 else:
                     time.sleep(1)
             except:
