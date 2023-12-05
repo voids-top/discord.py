@@ -729,7 +729,10 @@ class AudioPlayer(threading.Thread):
         self.loops = 0 # for calcing duration (50*self.loops)s
         self.__loops = 0
         self.cache = []
+        self.send_cache = []
         threading.Thread(target=self.cacher, daemon=True).start()
+        for n in range(3):
+            threading.Thread(target=self.sender, daemon=True).start()
         while not len(self.cache) > self.source.cache_before:
             time.sleep(0.1)
         skipping = False
@@ -777,7 +780,7 @@ class AudioPlayer(threading.Thread):
             #self.__loops += 1
             next_time = self._start + self.DELAY * self.__loops
             delay = self.DELAY + (next_time - time.perf_counter())
-            if 0 <= delay <= 0.002:
+            if delay <= 0.002:
                 try:
                     data = self.cache.pop(0)
                 except:
@@ -785,10 +788,8 @@ class AudioPlayer(threading.Thread):
                 if not data:
                     self.stop()
                     break
-                play_audio(data)
+                self.send_cache.append(data)
                 self.loops += 1
-                self.__loops += 1
-            elif delay < 0:
                 self.__loops += 1
             else:
                 if delay > 0.002:
@@ -819,6 +820,14 @@ class AudioPlayer(threading.Thread):
                     time.sleep(1)
             except:
                 time.sleep(0.1)
+    def sender(self):
+        while not self._end.is_set():
+            try:
+                play_audio = self.client.send_audio_packet
+                data = self.send_cache.pop(0)
+                play_audio(data)
+            except:
+                time.sleep(0.001)
     
     def run(self) -> None:
         try:
