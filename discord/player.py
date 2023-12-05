@@ -740,7 +740,7 @@ class AudioPlayer(threading.Thread):
         skip_frame = client.send_null_packet
         self._speak(SpeakingState.voice)
         time.sleep(0.01)
-        self._start = time.perf_counter()
+        self._start = time.perf_counter()-0.05
 
         while not self._end.is_set():
             # are we paused?
@@ -780,7 +780,7 @@ class AudioPlayer(threading.Thread):
             if delay < self.source.delay_limit: # if delaying over 100ms, moving server side frame aka packet timestamp (for dont occuring frame delay)
                 #print("starttime moved")
                 self.moved_amount += self.source.skip_amount
-                self._start += self.source.skip_amount
+                self._start -= self.source.skip_amount
             else:
                 if delay > self.source.sleep_limit:
                     #print(f"{delay} sleep")
